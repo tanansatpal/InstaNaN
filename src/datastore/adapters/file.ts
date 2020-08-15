@@ -27,7 +27,6 @@ export class FileDB implements DataStorage {
   }
 
   update(entity: string, query: any, data: any): Promise<any> {
-    console.log(entity, query, data);
     return this.db.get(entity)
       .find(query)
       .assign(data)
