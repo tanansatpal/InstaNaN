@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, UsePipes, ValidationPipe } from '@nestjs/common';
-import { PostsService } from './posts.service';
+import { PostsService } from '@posts/posts.service';
 import { CreatePostDto } from '@posts/dto/create-post.dto';
 import { PostDto } from '@posts/dto/post.dto';
 import { PostListDto } from '@posts/dto/post-list.dto';
