@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DataStorage } from './interfaces/data-storage.interface';
-import { FileDB } from './adapters/file';
+import { DataStorage } from './datastore/interfaces/data-storage.interface';
+import { FileDB } from './datastore/adapters/file';
 
 @Injectable()
 export class DatastoreService {

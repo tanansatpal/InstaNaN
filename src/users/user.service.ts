@@ -1,34 +1,78 @@
-import { Injectable } from '@nestjs/common';
-import { DatastoreService } from '../datastore/datastore.service';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserListDto } from './dto/user-list.dto';
-import { UserDto } from './dto/user.dto';
+import { UserDto, UserPartialDto } from './dto/user.dto';
+import { FindOneOptions, MongoRepository } from 'typeorm/index';
+import { ObjectID } from 'mongodb';
+import { UserEntity } from '@users/entity/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { RegisterDto } from '@users/dto/register.dto';
+import { toPromise } from '@shared/utils';
 
 
 @Injectable()
 export class UserService {
-  private storage;
 
-  constructor(private datastoreService: DatastoreService) {
-    this.storage = datastoreService.getStorage();
+  constructor(@InjectRepository(UserEntity)
+              private readonly usersRepo: MongoRepository<UserEntity>) {
   }
 
-  public createUser(user: UserDto): Promise<UserDto> {
-    return this.storage.add('users', user);
+  public async createUser(data: RegisterDto): Promise<UserDto> {
+    const { name, email, username, password } = data;
+
+    // check if the user exists in the db
+    const userInDb = await this.usersRepo.findOne({ username });
+    if (userInDb) {
+      throw new HttpException('User already exists', HttpStatus.CONFLICT);
+    }
+
+    const user: UserEntity = await this.usersRepo.create({
+      name, email, username, password,
+    });
+    await this.usersRepo.save(user);
+    return toPromise(this.toUserDto(user));
   }
 
-  public findAll(): Promise<UserListDto> {
-    return this.storage.get('users');
+  public async findAll(): Promise<UserListDto> {
+    const users = await this.usersRepo.find({ take: 20 });
+    return { users: users.map(user => this.toUserDto(user)) };
   }
 
-  public findOne(_id: string): Promise<UserDto> {
-    return this.storage.get('users', { _id });
+  public async findOne(criteria?: string, options?: FindOneOptions<UserDto>): Promise<UserDto | undefined> {
+    const user = await this.usersRepo.findOne(criteria, options);
+    if (!user) {
+      throw new HttpException(
+        `User doesn't exist`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return this.toUserDto(user);
   }
 
-  public updateUser(_id: string, user: UserDto): Promise<UserDto> {
-    return this.storage.update('users', { _id }, user);
+  public async updateUser(_id: string, data: UserDto): Promise<UserDto> {
+    const updateResult = await this.usersRepo.findOneAndUpdate({ _id: new ObjectID(_id) }, data, { returnOriginal: false });
+    return this.toUserDto(updateResult.value);
   }
 
-  public destoryUser(_id: string): Promise<UserDto> {
-    return this.storage.delete('users', { _id });
+  public async updatePartialUser(_id: string, data: UserPartialDto): Promise<UserDto> {
+    const updateResult = await this.usersRepo.findOneAndUpdate({ _id: new ObjectID(_id) }, { $set: data }, { returnOriginal: false });
+    return this.toUserDto(updateResult.value);
   }
+
+  public async destoryUser(_id: string): Promise<UserDto> {
+    const deleteResult = await this.usersRepo.findOneAndDelete({ _id: new ObjectID(_id) });
+    return this.toUserDto(deleteResult.value);
+  }
+
+
+  public toUserDto = (data: UserEntity): UserDto => {
+    const { _id, name, email, username } = data;
+
+    return {
+      _id,
+      name,
+      email,
+      username,
+    };
+  };
 }

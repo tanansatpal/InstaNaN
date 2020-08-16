@@ -1,7 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException, HttpStatus,
+  Param, Patch,
+  Post,
+  Put,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserDto } from './dto/user.dto';
+import { UserDto, UserPartialDto } from './dto/user.dto';
 import { UserListDto } from './dto/user-list.dto';
+import { RegisterDto } from '@users/dto/register.dto';
 
 @Controller('api/users')
 export class UsersController {
@@ -20,13 +32,21 @@ export class UsersController {
   }
 
   @Post()
-  async create(@Body() body: UserDto): Promise<UserDto> {
+  @UsePipes(new ValidationPipe())
+  async create(@Body() body: RegisterDto): Promise<UserDto> {
     return await this.userService.createUser(body);
   }
 
   @Put(':id')
+  @UsePipes(new ValidationPipe())
   async update(@Param('id') id: string, @Body() userDto: UserDto): Promise<UserDto> {
     return await this.userService.updateUser(id, userDto);
+  }
+
+  @Patch(':id')
+  @UsePipes(new ValidationPipe())
+  async updatePatch(@Param('id') id: string, @Body() userDto: UserPartialDto): Promise<UserDto> {
+    return await this.userService.updatePartialUser(id, userDto);
   }
 
   @Delete(':id')
