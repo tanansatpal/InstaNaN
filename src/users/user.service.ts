@@ -7,6 +7,8 @@ import { UserEntity } from '@users/entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterDto } from '@users/dto/register.dto';
 import { toPromise } from '@shared/utils';
+import { LoginDto } from '@users/dto/login.dto';
+import { compare as comparePasswords } from 'bcrypt';
 
 
 @Injectable()
@@ -37,7 +39,7 @@ export class UserService {
     return { users: users.map(user => this.toUserDto(user)) };
   }
 
-  public async findOne(criteria?: string, options?: FindOneOptions<UserDto>): Promise<UserDto | undefined> {
+  public async findOne(criteria: string | number | Date | ObjectID | FindOneOptions<UserEntity> | Partial<UserEntity>, options?: FindOneOptions<UserDto>): Promise<UserDto | undefined> {
     const user = await this.usersRepo.findOne(criteria, options);
     if (!user) {
       throw new HttpException(
@@ -62,6 +64,23 @@ export class UserService {
   public async destoryUser(_id: string): Promise<UserDto> {
     const deleteResult = await this.usersRepo.findOneAndDelete({ _id: new ObjectID(_id) });
     return this.toUserDto(deleteResult.value);
+  }
+
+  async findByLogin({ username, password }: LoginDto): Promise<UserDto> {
+    const user = await this.usersRepo.findOne({ username });
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.UNAUTHORIZED);
+    }
+
+    // compare passwords
+    const areEqual = await comparePasswords(password, user.password);
+
+    if (!areEqual) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+
+    return this.toUserDto(user);
   }
 
 

@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { BeforeInsert } from 'typeorm';
 import { BeforeUpdate } from 'typeorm/index';
 
-@Entity('user')
+@Entity('users')
 export class UserEntity {
   @ObjectIdColumn()
   _id: ObjectID;
