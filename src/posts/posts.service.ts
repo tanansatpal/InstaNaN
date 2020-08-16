@@ -7,21 +7,26 @@ import { CreatePostDto } from '@posts/dto/create-post.dto';
 import { PostDto } from '@posts/dto/post.dto';
 import { PostListDto } from '@posts/dto/post-list.dto';
 import { ObjectID } from 'mongodb';
+import { UserService } from '@users/user.service';
+import { UserDto } from '@users/dto/user.dto';
 
 @Injectable()
 export class PostsService {
   constructor(@InjectRepository(PostEntity)
-              private readonly postsRepo: MongoRepository<PostEntity>) {
+              private readonly postsRepo: MongoRepository<PostEntity>, private usersService: UserService) {
   }
 
-  public async createPost(data: CreatePostDto): Promise<PostDto> {
+  public async createPost({ username }: UserDto, data: CreatePostDto): Promise<PostDto> {
     const { description } = data;
 
-    const user: PostEntity = await this.postsRepo.create({
+    const { _id: userId } = await this.usersService.findOne({ username });
+
+    const post: PostEntity = await this.postsRepo.create({
       description,
+      userId,
     });
-    await this.postsRepo.save(user);
-    return toPromise(this.toPostDto(user));
+    await this.postsRepo.save(post);
+    return toPromise(this.toPostDto(post));
   }
 
   public async findAll(): Promise<PostListDto> {
@@ -41,7 +46,7 @@ export class PostsService {
     return this.toPostDto(post);
   }
 
-  public async destoryPost(_id: string): Promise<PostDto> {
+  public async destroyPost(_id: ObjectID): Promise<PostDto> {
     const deleteResult = await this.postsRepo.findOneAndDelete({ _id: new ObjectID(_id) });
     return this.toPostDto(deleteResult.value);
   }

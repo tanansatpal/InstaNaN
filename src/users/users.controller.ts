@@ -49,7 +49,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  async destory(@Param('id') id: string): Promise<UserDto> {
-    return await this.userService.destoryUser(id);
+  async destroy(@Param('id') id: string): Promise<UserDto> {
+    return await this.userService.destroyUser(id);
   }
 }

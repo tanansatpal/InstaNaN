@@ -61,7 +61,7 @@ export class UserService {
     return this.toUserDto(updateResult.value);
   }
 
-  public async destoryUser(_id: string): Promise<UserDto> {
+  public async destroyUser(_id: string): Promise<UserDto> {
     const deleteResult = await this.usersRepo.findOneAndDelete({ _id: new ObjectID(_id) });
     return this.toUserDto(deleteResult.value);
   }

@@ -30,7 +30,8 @@ export class AuthModule {
       providers: [AuthService, JwtStrategy],
       exports: [
         PassportModule,
-        JwtModule],
+        JwtModule,
+      ],
     };
   }
 }

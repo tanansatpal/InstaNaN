@@ -1,4 +1,5 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, ObjectID, ObjectIdColumn } from 'typeorm/index';
+import { BeforeInsert, BeforeUpdate, Column, Entity, ObjectIdColumn } from 'typeorm/index';
+import { ObjectID } from 'mongodb';
 
 @Entity('posts')
 export class PostEntity {
@@ -6,13 +7,10 @@ export class PostEntity {
   _id: ObjectID;
 
   @Column()
-  userId;
+  userId: ObjectID;
 
   @Column()
   description: string;
-
-  @Column()
-  type: string;
 
   @Column()
   createdOn: Date;
