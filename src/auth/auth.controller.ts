@@ -4,7 +4,7 @@ import { RegisterDto } from '@users/dto/register.dto';
 import { LoginStatus, RegistrationStatus } from './interfaces';
 import { LoginDto } from '@users/dto/login.dto';
 
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {
   }

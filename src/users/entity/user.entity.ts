@@ -24,7 +24,7 @@ export class UserEntity {
   createdOn: Date;
 
   @Column()
-  updateOn: Date;
+  updatedOn: Date;
 
   @BeforeInsert()
   async hashPassword() {
@@ -38,6 +38,6 @@ export class UserEntity {
 
   @BeforeUpdate()
   setUpdatedOn() {
-    this.updateOn = new Date();
+    this.updatedOn = new Date();
   }
 }
