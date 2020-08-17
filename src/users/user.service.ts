@@ -11,6 +11,8 @@ import { LoginDto } from '@users/dto/login.dto';
 import { compare as comparePasswords } from 'bcrypt';
 import { FollowerDto } from '@users/dto/follower.dto';
 import { FollowersEntity } from '@users/entity/followers.entity';
+import { FollowersListDto } from '@users/dto/followers-list.dto';
+import { FollowingsListDto, FUserDto } from '@users/dto/followings-list.dto';
 
 
 @Injectable()
@@ -121,6 +123,20 @@ export class UserService {
     return this.toFollowerDto(deleteResult.value);
   }
 
+  public async getFollowers({ _id }: UserDto): Promise<FollowersListDto> {
+    const followers = await this.followersRepo.find({ target: _id });
+    const _ids = followers.map(f => f.follower);
+    const users = await this.usersRepo.findByIds(_ids);
+    return { followers: users.map(user => this.toFollowerUserDto(user)) };
+  }
+
+  public async getFollowings({ _id }: UserDto): Promise<FollowingsListDto> {
+    const followings = await this.followersRepo.find({ follower: _id });
+    const _ids = followings.map(f => f.follower);
+    const users = await this.usersRepo.findByIds(_ids);
+    return { followings: users.map(user => this.toFollowerUserDto(user)) };
+  }
+
   private toUserDto = (data: UserEntity): UserDto => {
     const { _id, name, email, username } = data;
 
@@ -135,5 +151,10 @@ export class UserService {
   private toFollowerDto = (data: FollowersEntity): FollowerDto => {
     const { _id, follower, target } = data;
     return { _id, follower, target };
+  };
+
+  private toFollowerUserDto = (data: UserEntity): FUserDto => {
+    const { _id, username, name } = data;
+    return { _id, username, name };
   };
 }

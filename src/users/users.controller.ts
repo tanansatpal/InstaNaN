@@ -17,6 +17,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { ObjectID } from 'mongodb';
 import { FollowerDto } from '@users/dto/follower.dto';
 import { Request } from 'express';
+import { FollowingsListDto } from '@users/dto/followings-list.dto';
+import { FollowersListDto } from '@users/dto/followers-list.dto';
 
 @Controller('api/users')
 export class UsersController {
@@ -28,6 +30,20 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   findAll(): Promise<UserListDto> {
     return this.userService.findAll();
+  }
+
+  @Get('followers')
+  @UseGuards(AuthGuard('jwt'))
+  async getFollowers(@Req() req: Request): Promise<FollowersListDto> {
+    const currentUser = <UserDto>req.user;
+    return await this.userService.getFollowers(currentUser);
+  }
+
+  @Get('followings')
+  @UseGuards(AuthGuard('jwt'))
+  async getFollowings(@Param('id') id: string, @Req() req: Request): Promise<FollowingsListDto> {
+    const currentUser = <UserDto>req.user;
+    return await this.userService.getFollowings(currentUser);
   }
 
   @Get(':id')
