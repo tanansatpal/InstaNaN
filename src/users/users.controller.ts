@@ -5,7 +5,7 @@ import {
   Get,
   Param, Patch,
   Post,
-  Put, UseGuards,
+  Put, Req, UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -14,6 +14,9 @@ import { UserDto, UserPartialDto } from './dto/user.dto';
 import { UserListDto } from './dto/user-list.dto';
 import { RegisterDto } from '@users/dto/register.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { ObjectID } from 'mongodb';
+import { FollowerDto } from '@users/dto/follower.dto';
+import { Request } from 'express';
 
 @Controller('api/users')
 export class UsersController {
@@ -58,5 +61,19 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   async destroy(@Param('id') id: string): Promise<UserDto> {
     return await this.userService.destroyUser(id);
+  }
+
+  @Post(':id/follow')
+  @UseGuards(AuthGuard('jwt'))
+  async followUser(@Param('id') id: string, @Req() req: Request): Promise<FollowerDto> {
+    const currentUser = <UserDto>req.user;
+    return await this.userService.followUser(currentUser, new ObjectID(id));
+  }
+
+  @Post(':id/unfollow')
+  @UseGuards(AuthGuard('jwt'))
+  async unfollowUser(@Param('id') id: string, @Req() req: Request): Promise<FollowerDto> {
+    const currentUser = <UserDto>req.user;
+    return await this.userService.unfollowUser(currentUser, new ObjectID(id));
   }
 }
