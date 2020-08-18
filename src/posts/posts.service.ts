@@ -7,19 +7,22 @@ import { CreatePostDto } from '@posts/dto/create-post.dto';
 import { PostDto } from '@posts/dto/post.dto';
 import { PostListDto } from '@posts/dto/post-list.dto';
 import { ObjectID } from 'mongodb';
-import { UserService } from '@users/user.service';
 import { UserDto } from '@users/dto/user.dto';
+import { FUserDto } from '@users/dto/followings-list.dto';
+
+enum SortOrder {
+  ASCENDING = 1,
+  DESCENDING = -1
+}
 
 @Injectable()
 export class PostsService {
   constructor(@InjectRepository(PostEntity)
-              private readonly postsRepo: MongoRepository<PostEntity>, private usersService: UserService) {
+              private readonly postsRepo: MongoRepository<PostEntity>) {
   }
 
-  public async createPost({ username }: UserDto, data: CreatePostDto): Promise<PostDto> {
+  public async createPost({ _id: userId }: UserDto, data: CreatePostDto): Promise<PostDto> {
     const { description } = data;
-
-    const { _id: userId } = await this.usersService.findOne({ username });
 
     const post: PostEntity = await this.postsRepo.create({
       description,
@@ -30,7 +33,7 @@ export class PostsService {
   }
 
   public async findAll(): Promise<PostListDto> {
-    const users = await this.postsRepo.find({ take: 20 });
+    const users = await this.postsRepo.find();
     return { posts: users.map(user => this.toPostDto(user)) };
   }
 
@@ -51,7 +54,36 @@ export class PostsService {
     return this.toPostDto(deleteResult.value);
   }
 
-  public toPostDto = (data: PostEntity): PostDto => {
+  // public async getFeedForSingleUser(user: ObjectID) {
+  //
+  // }
+
+  public async getFeedForMultipleUsers(users: FUserDto[], anchor: ObjectID, limit: number): Promise<PostListDto> {
+    if (!users.length) {
+      return { posts: [] };
+    }
+    if (anchor == null && limit < 0) {
+      return { posts: [] };
+    }
+
+    const _ids = users.map(u => u._id);
+
+    const posts = await this.postsRepo.find({ userId: { $in: _ids } });
+
+    let order: SortOrder = null;
+
+    if (anchor == null) {
+      order = SortOrder.DESCENDING;
+    } else if (limit > 0) {
+      order = SortOrder.DESCENDING;
+    } else {
+      order = SortOrder.ASCENDING;
+    }
+
+    return this.toPostsListDto(posts, order);
+  }
+
+  public toPostDto(data: PostEntity): PostDto {
     const { _id, description, createdOn, likes, comments, updatedOn } = data;
 
     return {
@@ -63,4 +95,12 @@ export class PostsService {
       comments,
     };
   };
+
+  private toPostsListDto(posts: PostEntity[], order: SortOrder): PostListDto {
+    let data = posts.map(p => this.toPostDto(p));
+    if (order == SortOrder.ASCENDING) {
+      data = data.reverse();
+    }
+    return { posts: data };
+  }
 }

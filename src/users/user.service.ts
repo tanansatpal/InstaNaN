@@ -130,9 +130,9 @@ export class UserService {
     return { followers: users.map(user => this.toFollowerUserDto(user)) };
   }
 
-  public async getFollowings({ _id }: UserDto): Promise<FollowingsListDto> {
-    const followings = await this.followersRepo.find({ follower: _id });
-    const _ids = followings.map(f => f.follower);
+  public async getFollowings({ _id }: UserDto, limit = 20): Promise<FollowingsListDto> {
+    const followings = await this.followersRepo.find({ follower: _id, take: limit });
+    const _ids = followings.map(f => f.target);
     const users = await this.usersRepo.findByIds(_ids);
     return { followings: users.map(user => this.toFollowerUserDto(user)) };
   }

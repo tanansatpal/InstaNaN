@@ -10,11 +10,11 @@ import { UserEntity } from '@users/entity/user.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([PostEntity, UserEntity]),
-    UsersModule,
     AuthModule,
   ],
   controllers: [PostsController],
   providers: [PostsService],
+  exports: [PostsService],
 })
 export class PostsModule {
 }

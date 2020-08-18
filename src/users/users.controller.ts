@@ -1,8 +1,8 @@
 import {
   Body,
   Controller,
-  Delete,
-  Get,
+  Delete, forwardRef,
+  Get, Inject,
   Param, Patch,
   Post,
   Put, Req, UseGuards,
@@ -19,17 +19,26 @@ import { FollowerDto } from '@users/dto/follower.dto';
 import { Request } from 'express';
 import { FollowingsListDto } from '@users/dto/followings-list.dto';
 import { FollowersListDto } from '@users/dto/followers-list.dto';
+import { FeedService } from '../feed/feed.service';
+import { PostListDto } from '@posts/dto/post-list.dto';
 
 @Controller('api/users')
 export class UsersController {
 
-  constructor(private userService: UserService) {
+  constructor(private userService: UserService, @Inject(forwardRef(() => FeedService)) private feedService: FeedService) {
   }
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
   findAll(): Promise<UserListDto> {
     return this.userService.findAll();
+  }
+
+  @Get('timeline')
+  @UseGuards(AuthGuard('jwt'))
+  async getUserTimeline(@Req() req: Request): Promise<PostListDto> {
+    const currentUser = <UserDto>req.user;
+    return await this.feedService.getFeedFor(currentUser);
   }
 
   @Get('followers')

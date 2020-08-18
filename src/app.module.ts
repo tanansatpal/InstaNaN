@@ -7,13 +7,16 @@ import { ConfigModule } from '@nestjs/config';
 import { DatastoreService } from './datastore.service';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from '@posts/posts.module';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    UsersModule, DatastoreModule.forRoot(),
+    UsersModule,
+    DatastoreModule.forRoot(),
     AuthModule.forRoot(),
     PostsModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [AppService, DatastoreService],
